@@ -21,7 +21,11 @@ class Semaphore(polymodel.PolyModel):
     def Wait(self, obj, *args, **kwargs):
         while True:
             try:
-                lneedsRun = db.run_in_transaction(_doWait, self.key(), obj, *args, **kwargs)
+                lneedsRun = db.run_in_transaction(
+                        _doWait, 
+                        self.key(), 
+                        obj, *args, **kwargs
+                )
                 if lneedsRun:
                     try:
                         obj(*args, **kwargs)

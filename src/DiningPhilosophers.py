@@ -12,24 +12,24 @@ class Fork(Semaphore.Semaphore):
         return lfork
     ConstructFork = classmethod(ConstructFork)
 
-def EatByKey(aFirstForkKey, aSecondForkKey, aIndex, aNumLoops, aHasFirst, aHasSecond):
+def ThinkAndEatByKey(aFirstForkKey, aSecondForkKey, aIndex, aNumLoops, aHasFirst, aHasSecond):
     lFirstFork = db.get(aFirstForkKey)
     if not lFirstFork:
         raise Exception("Failed to retrieve Left Fork")
     lSecondFork = db.get(aSecondForkKey)
     if not lSecondFork:
         raise Exception("Failed to retrieve Right Fork")
-    Eat(lFirstFork, lSecondFork, aIndex, aNumLoops, aHasFirst, aHasSecond)
+    ThinkAndEat(lFirstFork, lSecondFork, aIndex, aNumLoops, aHasFirst, aHasSecond)
     
-def Eat(aFirstFork, aSecondFork, aIndex, aNumLoops, aHasFirst=False, aHasSecond=False):
+def ThinkAndEat(aFirstFork, aSecondFork, aIndex, aNumLoops, aHasFirst=False, aHasSecond=False):
     if not aHasFirst:
         # this is before we've got the semaphore
         logging.info("Wait on first for %s" % aIndex)
-        aFirstFork.Wait(EatByKey, aFirstFork.key(), aSecondFork.key(), aIndex, aNumLoops, True, False)
+        aFirstFork.Wait(ThinkAndEatByKey, aFirstFork.key(), aSecondFork.key(), aIndex, aNumLoops, True, False)
     elif not aHasSecond:
         sleep(10) # takes a while to pick up the second fork!
         logging.info("Wait on second for %s" % aIndex)
-        aSecondFork.Wait(EatByKey, aFirstFork.key(), aSecondFork.key(), aIndex, aNumLoops, True, True)
+        aSecondFork.Wait(ThinkAndEatByKey, aFirstFork.key(), aSecondFork.key(), aIndex, aNumLoops, True, True)
     else:
         logging.info("EAT for %s" % aIndex)
         logging.info("Dropping second fork for %s" % aIndex)
@@ -41,7 +41,7 @@ def Eat(aFirstFork, aSecondFork, aIndex, aNumLoops, aHasFirst=False, aHasSecond=
         else:
             logging.info("Ready to think again, deferring")
             deferred.defer(
-                Eat,
+                ThinkAndEat,
                 aFirstFork,
                 aSecondFork,
                 aIndex,
@@ -64,7 +64,7 @@ def DiningPhilosphersFailTest():
     lphilosopherIndex = 0
     while lphilosopherIndex < lnumPhilosophers:
         deferred.defer(
-            Eat, 
+            ThinkAndEat, 
             lforks[lphilosopherIndex], 
             lforks[(lphilosopherIndex+1) % lnumPhilosophers],
             lphilosopherIndex,
@@ -91,7 +91,7 @@ def DiningPhilosphersSucceedTest():
         if lphilosopherIndex < lnumPhilosophers-1:
             # not the last one
             deferred.defer(
-                Eat, 
+                ThinkAndEat, 
                 lforks[lphilosopherIndex], 
                 lforks[lphilosopherIndex+1],
                 lphilosopherIndex,
@@ -102,7 +102,7 @@ def DiningPhilosphersSucceedTest():
         else:
             # the last one
             deferred.defer(
-                Eat,
+                ThinkAndEat,
                 lforks[0],
                 lforks[lphilosopherIndex],
                 lphilosopherIndex,
